@@ -1,0 +1,175 @@
+;=====================================================
+; Example of Position Independent Code
+; Lawrence Woodman <lwoodman@vlifesystems.com>
+; 22 January 2020
+;=====================================================
+
+; Basic Stub
+OPEN_PR    = $28               ; ( character
+CLOSE_PR   = $29               ; ) character
+PLUS       = $AA               ; + character
+TIMES      = $AC               ; * character
+TOK_PEEK   = $C2               ; PEEK token
+TOK_SYS    = $9E               ; SYS token
+
+CHR_RTN    = $0D               ; Return character
+OP_JMPA    = $4C               ; JMP absolute opcode
+TXTTAB     = $2B               ; Pointer to start of tokenized Basic
+CCHROUT    = $FFD2             ; Output character to current output device
+
+TMP_DPTR   = $FB               ; Temporary data pointer
+JMP_TABLE  = $02A1             ; The location of the jump table
+DATA_TABLE = $0334             ; The location of the data table
+IHELLOMSG  = 0                 ; Index to 'HELLO, WORLD!' message
+IBYEMSG    = 2                 ; Index to 'GOODBYE, WORLD!' message
+CSAYHELLO  = JMP_TABLE         ; Vector to SayHello
+CSAYBYE    = JMP_TABLE+3       ; Vector to SayGoodbye
+
+            ;=========================================
+            ;  Basic Stub
+            ;=========================================
+            .byt $01, $80     ; Load Address.  Using character ROM because
+                              ; correct RAM location memory configuration
+                              ; dependent
+
+            ; 2020 SYS PEEK(43)+PEEK(44)*256+27
+            * = $1001
+start       .word basicEnd    ; Next Line link, here end of Basic program
+            .word 2020        ; The line number for the SYS statement
+            .byt  TOK_SYS     ; SYS token
+            .asc  " "
+            .byt  TOK_PEEK    ; PEEK token
+            .byt  OPEN_PR     ; (
+            .asc  "43"        ; 43
+            .byt  CLOSE_PR    ; )
+            .byt  PLUS        ; +
+            .byt  TOK_PEEK    ; PEEK token
+            .byt  OPEN_PR     ; (
+            .asc  "44"        ; 44
+            .byt  CLOSE_PR    ; )
+            .byt  TIMES       ; *
+            .asc  "256"       ; 256
+            .byt  PLUS        ; +
+            .asc  "27"        ; 27 (The size of the stub)
+            .byt  0           ; End of Basic line
+basicEnd    .word 0           ; End of Basic program
+
+
+            ;=========================================
+            ; Start of machine language
+            ;=========================================
+
+            ; BRanch Always
+            clv
+            bvc makeJTable
+
+            ;-----------------------------------------
+            ; Message strings
+            ;-----------------------------------------
+helloMsg   .asc "HELLO, WORLD!" : .byt CHR_RTN : .byt 0
+byeMsg     .asc "GOODBYE, WORLD!" : .byt CHR_RTN : .byt 0
+
+            ;-----------------------------------------
+            ; Create jump table
+            ;-----------------------------------------
+
+            ; Store JMP absolute opcodes
+makeJTable  lda #OP_JMPA      ; JMP absolute opcode
+            sta CSAYHELLO
+            sta CSAYBYE
+
+            ; Jump table address for SayHello
+            clc
+            lda TXTTAB        ; Get start of tokenized Basic
+            adc #<(SayHello-start)
+            sta CSAYHELLO+1
+            lda TXTTAB+1
+            adc #>(SayHello-start)
+            sta CSAYHELLO+2
+
+            ; Jump table address for SayGoodbye
+            clc
+            lda TXTTAB        ; Get start of tokenized Basic
+            adc #<(SayGoodbye-start)
+            sta CSAYBYE+1
+            lda TXTTAB+1
+            adc #>(SayGoodbye-start)
+            sta CSAYBYE+2
+
+            ;-----------------------------------------
+            ; Create data table
+            ;-----------------------------------------
+
+            ; Point entry at index IHELLOMSG to helloMsg
+            clc
+            lda TXTTAB        ; Get start of tokenized Basic
+            adc #<(helloMsg-start)
+            sta DATA_TABLE+IHELLOMSG
+            lda TXTTAB+1
+            adc #>(helloMsg-start)
+            sta DATA_TABLE+IHELLOMSG+1
+
+            ; Point entry at index IBYEMSG to byeMsg
+            clc
+            lda TXTTAB        ; Get start of tokenized Basic
+            adc #<(byeMsg-start)
+            sta DATA_TABLE+IBYEMSG
+            lda TXTTAB+1
+            adc #>(byeMsg-start)
+            sta DATA_TABLE+IBYEMSG+1
+
+
+            ;=========================================
+            ; MAIN program
+            ;=========================================
+            jsr CSAYHELLO
+            jsr CSAYBYE
+            rts
+
+
+            ;=========================================
+            ; Subroutines
+            ;=========================================
+
+            ;-----------------------------------------
+            ; SayHello
+            ; Displays 'HELLO, WORLD!' message
+            ;-----------------------------------------
+SayHello    .(
+            ; Point TMP_DPTR to helloMsg
+            lda DATA_TABLE+IHELLOMSG
+            sta TMP_DPTR
+            lda DATA_TABLE+IHELLOMSG+1
+            sta TMP_DPTR+1
+
+            ; Output message
+            ldy #$00
+loop        lda (TMP_DPTR), y
+            beq finished
+            jsr CCHROUT            ; Output char to screen
+            iny
+            bne loop
+finished    rts
+.)
+
+
+            ;-----------------------------------------
+            ; SayGoodbye
+            ; Displays 'GOODBYE, WORLD!' message
+            ;-----------------------------------------
+SayGoodbye  .(
+            ; Point TMP_DPTR to byeMsg
+            lda DATA_TABLE+IBYEMSG
+            sta TMP_DPTR
+            lda DATA_TABLE+IBYEMSG+1
+            sta TMP_DPTR+1
+
+            ; Output message
+            ldy #$00
+loop        lda (TMP_DPTR), y
+            beq finished
+            jsr CCHROUT            ; Output char to screen
+            iny
+            bne loop
+finished    rts
+.)
