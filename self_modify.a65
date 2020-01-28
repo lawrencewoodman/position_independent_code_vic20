@@ -119,7 +119,7 @@ loop       ; Calculate address to change
             ; Increment address
             inc SMADDR
             bne lastStore
-            inc SMADDR
+            inc SMADDR+1
 
 lastStore   sta (SMADDR, x)
             lda (PSMTABLE), y
