@@ -129,8 +129,8 @@ lastStore   sta (SMADDR, x)
             ;=========================================
             ; MAIN program
             ;=========================================
-main:       jsr $FFFF
-            jsr $FFFF
+main:       jsr SayHello
+            jsr SayGoodbye
             rts
 
 
@@ -145,7 +145,7 @@ main:       jsr $FFFF
 SayHello    .(
             ; Output message
             ldy #$00
-loop        lda $FFFF, y
+loop        lda helloMsg, y
             beq finished
             jsr CCHROUT        ; Output char to screen
             iny
@@ -161,7 +161,7 @@ finished    rts
 SayGoodbye  .(
             ; Output message
             ldy #$00
-loop        lda $FFFF, y
+loop        lda byeMsg, y
             beq finished
             jsr CCHROUT        ; Output char to screen
             iny
