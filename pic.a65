@@ -21,7 +21,7 @@ TMP_DPTR   = $FB               ; Temporary data pointer
 JMP_TABLE  = $02A1             ; The location of the jump table
 DATA_TABLE = $0334             ; The location of the data table
 IHELLOMSG  = 0                 ; Index to 'HELLO, WORLD!' message
-IBYEMSG    = 2                 ; Index to 'GOODBYE, WORLD!' message
+IBYEMSG    = IHELLOMSG+2       ; Index to 'GOODBYE, WORLD!' message
 CSAYHELLO  = JMP_TABLE         ; Vector to SayHello
 CSAYBYE    = JMP_TABLE+3       ; Vector to SayGoodbye
 
@@ -68,6 +68,11 @@ basicEnd    .word 0           ; End of Basic program
             ;-----------------------------------------
 helloMsg   .asc "HELLO, WORLD!" : .byt CHR_RTN : .byt 0
 byeMsg     .asc "GOODBYE, WORLD!" : .byt CHR_RTN : .byt 0
+
+
+            ;=========================================
+            ; Create jump and data tables
+            ;=========================================
 
             ;-----------------------------------------
             ; Create jump table
