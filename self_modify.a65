@@ -168,4 +168,3 @@ loop        lda byeMsg, y
             bne loop
 finished    rts
 .)
-
