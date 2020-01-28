@@ -14,7 +14,7 @@ TOK_SYS    = $9E               ; SYS token
 
 ; Self Modification
 TXTTAB     = $2B               ; Pointer to start of tokenized Basic
-SMADDR     = $0A               ; Address to modify
+SMADDR     = $09               ; Address to modify
 PSMTABLE   = $FB               ; Pointer to self-modification table
 
 ; Character output
