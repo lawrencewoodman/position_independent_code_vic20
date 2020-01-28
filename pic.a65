@@ -28,31 +28,31 @@ CSAYBYE    = JMP_TABLE+3       ; Vector to SayGoodbye
             ;=========================================
             ;  Basic Stub
             ;=========================================
-            .byt $01, $80     ; Load Address.  Using character ROM because
-                              ; correct RAM location memory configuration
-                              ; dependent
+            .byt $01, $80      ; Load Address.  Using character ROM because
+                               ; correct RAM location memory configuration
+                               ; dependent
 
             ; 2020 SYS PEEK(43)+PEEK(44)*256+27
             * = $1001
-start       .word basicEnd    ; Next Line link, here end of Basic program
-            .word 2020        ; The line number for the SYS statement
-            .byt  TOK_SYS     ; SYS token
+start       .word basicEnd     ; Next Line link, here end of Basic program
+            .word 2020         ; The line number for the SYS statement
+            .byt  TOK_SYS      ; SYS token
             .asc  " "
-            .byt  TOK_PEEK    ; PEEK token
-            .byt  OPEN_PR     ; (
-            .asc  "43"        ; 43
-            .byt  CLOSE_PR    ; )
-            .byt  PLUS        ; +
-            .byt  TOK_PEEK    ; PEEK token
-            .byt  OPEN_PR     ; (
-            .asc  "44"        ; 44
-            .byt  CLOSE_PR    ; )
-            .byt  TIMES       ; *
-            .asc  "256"       ; 256
-            .byt  PLUS        ; +
-            .asc  "27"        ; 27 (The size of the stub)
-            .byt  0           ; End of Basic line
-basicEnd    .word 0           ; End of Basic program
+            .byt  TOK_PEEK     ; PEEK token
+            .byt  OPEN_PR      ; (
+            .asc  "43"         ; 43
+            .byt  CLOSE_PR     ; )
+            .byt  PLUS         ; +
+            .byt  TOK_PEEK     ; PEEK token
+            .byt  OPEN_PR      ; (
+            .asc  "44"         ; 44
+            .byt  CLOSE_PR     ; )
+            .byt  TIMES        ; *
+            .asc  "256"        ; 256
+            .byt  PLUS         ; +
+            .asc  "27"         ; 27 (The size of the stub)
+            .byt  0            ; End of Basic line
+basicEnd    .word 0            ; End of Basic program
 
 
             ;=========================================
@@ -79,13 +79,13 @@ byeMsg     .asc "GOODBYE, WORLD!" : .byt CHR_RTN : .byt 0
             ;-----------------------------------------
 
             ; Store JMP absolute opcodes
-makeJTable  lda #OP_JMPA      ; JMP absolute opcode
+makeJTable  lda #OP_JMPA       ; JMP absolute opcode
             sta CSAYHELLO
             sta CSAYBYE
 
             ; Jump table address for SayHello
             clc
-            lda TXTTAB        ; Get start of tokenized Basic
+            lda TXTTAB         ; Get start of tokenized Basic
             adc #<(SayHello-start)
             sta CSAYHELLO+1
             lda TXTTAB+1
@@ -94,7 +94,7 @@ makeJTable  lda #OP_JMPA      ; JMP absolute opcode
 
             ; Jump table address for SayGoodbye
             clc
-            lda TXTTAB        ; Get start of tokenized Basic
+            lda TXTTAB         ; Get start of tokenized Basic
             adc #<(SayGoodbye-start)
             sta CSAYBYE+1
             lda TXTTAB+1
@@ -107,7 +107,7 @@ makeJTable  lda #OP_JMPA      ; JMP absolute opcode
 
             ; Point entry at index IHELLOMSG to helloMsg
             clc
-            lda TXTTAB        ; Get start of tokenized Basic
+            lda TXTTAB         ; Get start of tokenized Basic
             adc #<(helloMsg-start)
             sta DATA_TABLE+IHELLOMSG
             lda TXTTAB+1
@@ -116,7 +116,7 @@ makeJTable  lda #OP_JMPA      ; JMP absolute opcode
 
             ; Point entry at index IBYEMSG to byeMsg
             clc
-            lda TXTTAB        ; Get start of tokenized Basic
+            lda TXTTAB         ; Get start of tokenized Basic
             adc #<(byeMsg-start)
             sta DATA_TABLE+IBYEMSG
             lda TXTTAB+1
@@ -151,7 +151,7 @@ SayHello    .(
             ldy #$00
 loop        lda (TMP_DPTR), y
             beq finished
-            jsr CCHROUT            ; Output char to screen
+            jsr CCHROUT        ; Output char to screen
             iny
             bne loop
 finished    rts
@@ -173,7 +173,7 @@ SayGoodbye  .(
             ldy #$00
 loop        lda (TMP_DPTR), y
             beq finished
-            jsr CCHROUT            ; Output char to screen
+            jsr CCHROUT        ; Output char to screen
             iny
             bne loop
 finished    rts

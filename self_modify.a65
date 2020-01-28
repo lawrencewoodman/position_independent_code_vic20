@@ -24,31 +24,31 @@ CCHROUT    = $FFD2             ; Output character to current output device
             ;=========================================
             ;  Basic Stub
             ;=========================================
-            .byt $01, $80     ; Load Address.  Using character ROM because
-                              ; correct RAM location memory configuration
-                              ; dependent
+            .byt $01, $80      ; Load Address.  Using character ROM because
+                               ; correct RAM location memory configuration
+                               ; dependent
 
             ; 2020 SYS PEEK(43)+PEEK(44)*256+27
             * = $1001
-start       .word basicEnd    ; Next Line link, here end of Basic program
-            .word 2020        ; The line number for the SYS statement
-            .byt  TOK_SYS     ; SYS token
+start       .word basicEnd     ; Next Line link, here end of Basic program
+            .word 2020         ; The line number for the SYS statement
+            .byt  TOK_SYS      ; SYS token
             .asc  " "
-            .byt  TOK_PEEK    ; PEEK token
-            .byt  OPEN_PR     ; (
-            .asc  "43"        ; 43
-            .byt  CLOSE_PR    ; )
-            .byt  PLUS        ; +
-            .byt  TOK_PEEK    ; PEEK token
-            .byt  OPEN_PR     ; (
-            .asc  "44"        ; 44
-            .byt  CLOSE_PR    ; )
-            .byt  TIMES       ; *
-            .asc  "256"       ; 256
-            .byt  PLUS        ; +
-            .asc  "27"        ; 27 (The size of the stub)
-            .byt  0           ; End of Basic line
-basicEnd    .word 0           ; End of Basic program
+            .byt  TOK_PEEK     ; PEEK token
+            .byt  OPEN_PR      ; (
+            .asc  "43"         ; 43
+            .byt  CLOSE_PR     ; )
+            .byt  PLUS         ; +
+            .byt  TOK_PEEK     ; PEEK token
+            .byt  OPEN_PR      ; (
+            .asc  "44"         ; 44
+            .byt  CLOSE_PR     ; )
+            .byt  TIMES        ; *
+            .asc  "256"        ; 256
+            .byt  PLUS         ; +
+            .asc  "27"         ; 27 (The size of the stub)
+            .byt  0            ; End of Basic line
+basicEnd    .word 0            ; End of Basic program
 
 
             ;=========================================
@@ -77,7 +77,7 @@ smTable     .word main-start+1       : .word SayHello-start
             .word main-start+4       : .word SayGoodbye-start
             .word SayHello-start+3   : .word helloMsg-start
             .word SayGoodbye-start+3 : .word byeMsg-start
-            .word 0           ; End of table
+            .word 0            ; End of table
 
             ;-----------------------------------------
             ; Self-modify code to point to correct
@@ -87,7 +87,7 @@ smTable     .word main-start+1       : .word SayHello-start
 setupSM     .(
             ; Create pointer to smTable
             clc
-            lda TXTTAB        ; Get start of tokenized Basic
+            lda TXTTAB         ; Get start of tokenized Basic
             adc #<(smTable-start)
             sta PSMTABLE
             lda TXTTAB+1
@@ -123,7 +123,7 @@ loop       ; Calculate address to change
 
 lastStore   sta (SMADDR, x)
             lda (PSMTABLE), y
-            bne loop         ; If not end of table
+            bne loop           ; If not end of table
 .)
 
             ;=========================================
@@ -147,7 +147,7 @@ SayHello    .(
             ldy #$00
 loop        lda $FFFF, y
             beq finished
-            jsr CCHROUT            ; Output char to screen
+            jsr CCHROUT        ; Output char to screen
             iny
             bne loop
 finished    rts
@@ -163,7 +163,7 @@ SayGoodbye  .(
             ldy #$00
 loop        lda $FFFF, y
             beq finished
-            jsr CCHROUT            ; Output char to screen
+            jsr CCHROUT        ; Output char to screen
             iny
             bne loop
 finished    rts
