@@ -71,7 +71,7 @@ byeMsg     .asc "GOODBYE, WORLD!" : .byt CHR_RTN : .byt 0
 
             ;-----------------------------------------
             ; Self-modification table
-            ; offset-addr  :  offset-value
+            ; offsetAddr  :  offsetValue
             ;-----------------------------------------
 smTable     .word main-start+1       : .word SayHello-start
             .word main-start+4       : .word SayGoodbye-start
