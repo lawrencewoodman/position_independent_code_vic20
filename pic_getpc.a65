@@ -1,6 +1,6 @@
 ;=====================================================
 ; Example of Position Independent Code
-; Works out absolute address of PC
+; Works out absolute address of point in code
 ; to offset code from
 ; Lawrence Woodman <lwoodman@vlifesystems.com>
 ; 29 January 2020
