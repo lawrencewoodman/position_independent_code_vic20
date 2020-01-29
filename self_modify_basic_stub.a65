@@ -21,12 +21,15 @@ PSMTABLE   = $FB               ; Pointer to self-modification table
 CHR_RTN    = $0D               ; Return character
 CCHROUT    = $FFD2             ; Output character to current output device
 
-            ;=========================================
-            ;  Basic Stub
-            ;=========================================
+
             .byt $01, $80      ; Load Address.  Using character ROM because
                                ; correct RAM location memory configuration
                                ; dependent
+
+
+            ;=========================================
+            ;  Basic Stub
+            ;=========================================
 
             ; 2020 SYS PEEK(43)+PEEK(44)*256+27
             * = $1001

@@ -25,12 +25,15 @@ IBYEMSG    = IHELLOMSG+2       ; Index to 'GOODBYE, WORLD!' message
 CSAYHELLO  = JMP_TABLE         ; Vector to SayHello
 CSAYBYE    = JMP_TABLE+3       ; Vector to SayGoodbye
 
-            ;=========================================
-            ;  Basic Stub
-            ;=========================================
+
             .byt $01, $80      ; Load Address.  Using character ROM because
                                ; correct RAM location memory configuration
                                ; dependent
+
+
+            ;=========================================
+            ;  Basic Stub
+            ;=========================================
 
             ; 2020 SYS PEEK(43)+PEEK(44)*256+27
             * = $1001
