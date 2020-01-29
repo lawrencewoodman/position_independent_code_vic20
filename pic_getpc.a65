@@ -1,0 +1,231 @@
+;=====================================================
+; Example of Position Independent Code
+; Works out absolute address of PC
+; to offset code from
+; Lawrence Woodman <lwoodman@vlifesystems.com>
+; 29 January 2020
+;=====================================================
+
+; Opcodes
+OP_BNE     = $D0               ; BNE
+OP_DECA    = $CE               ; DEC absolute
+OP_JMPA    = $4C               ; JMP absolute
+OP_PHA     = $48               ; PHA
+OP_PLA     = $68               ; PLA
+OP_RTS     = $60               ; RTS
+OP_LDAA    = $AD               ; LDA absolute
+OP_STAA    = $8D               ; STA absolute
+
+CHR_RTN    = $0D               ; Return character
+CCHROUT    = $FFD2             ; Output character to current output device
+
+PC         = $09               ; Location to store PC in
+TMP_DPTR   = $FB               ; Temporary data pointer
+JMP_TABLE  = $02A1             ; The location of the jump table
+DATA_TABLE = $0334             ; The location of the data table
+IHELLOMSG  = 0                 ; Index to 'HELLO, WORLD!' message
+IBYEMSG    = IHELLOMSG+2       ; Index to 'GOODBYE, WORLD!' message
+CSAYHELLO  = JMP_TABLE         ; Vector to SayHello
+CSAYBYE    = JMP_TABLE+3       ; Vector to SayGoodbye
+
+GetPC      = $02A1             ; Location of GetPC routine
+
+            .byt $03, $12      ; Load Address.
+                               ; $1203 should work for any memory configuration
+
+            ;=========================================
+            ; Determine Absolute address for start of
+            ; code
+            ;=========================================
+            * = $1203
+
+            ;-----------------------------------------
+            ;  Create GetPC at $02A1
+            ;-----------------------------------------
+start       lda #OP_PLA        ; PLA
+            sta GetPC
+            lda #OP_STAA       ; STA PC
+            sta GetPC+1        ; - Store the 16-bit program counter at PC
+            lda #<PC           ;
+            sta GetPC+2
+            lda #>PC
+            sta GetPC+3
+            lda #OP_PLA        ; PLA
+            sta GetPC+4
+            lda #OP_STAA       ; STA PC+1
+            sta GetPC+5
+            lda #<PC+1
+            sta GetPC+6
+            lda #>PC+1         ; Using MSB of PC in case moved out of zero page
+            sta GetPC+7
+            lda #OP_PHA        ; PHA
+            sta GetPC+8        ; - Restore the return address to the stack
+            lda #OP_LDAA       ; LDA PC
+            sta GetPC+9
+            lda #<PC
+            sta GetPC+10
+            lda #>PC
+            sta GetPC+11
+            lda #OP_PHA        ; PHA
+            sta GetPC+12
+            lda #OP_BNE        ; BNE decL1
+            sta GetPC+13       ; - PC=PC-2 to point to calling instruction
+            lda #$03
+            sta GetPC+14
+            lda #OP_DECA      ; DEC PC+1
+            sta GetPC+15       ; - MSB
+            lda #<PC+1
+            sta GetPC+16
+            lda #>PC+1
+            sta GetPC+17
+            lda #OP_DECA      ; decL1:  DEC PC
+            sta GetPC+18       ; - LSB
+            lda #<PC
+            sta GetPC+19
+            lda #>PC
+            sta GetPC+20
+            lda #OP_BNE        ; BNE decL2
+            sta GetPC+21
+            lda #$03
+            sta GetPC+22
+            lda #OP_DECA      ; DEC PC+1
+            sta GetPC+23
+            lda #<PC+1
+            sta GetPC+24
+            lda #>PC+1
+            sta GetPC+25
+            lda #OP_DECA      ; decL2:  DEC PC
+            sta GetPC+26
+            lda #<PC
+            sta GetPC+27
+            lda #>PC
+            sta GetPC+28
+            lda #OP_RTS        ; RTS
+            sta GetPC+29
+
+callGetPC   jsr GetPC          ; Get absolute address of callGetPC
+
+
+            ;=========================================
+            ; Main program
+            ;=========================================
+
+            ; BRanch Always
+            clv
+            bvc makeJTable
+
+            ;-----------------------------------------
+            ; Message strings
+            ;-----------------------------------------
+helloMsg   .asc "HELLO, WORLD!" : .byt CHR_RTN : .byt 0
+byeMsg     .asc "GOODBYE, WORLD!" : .byt CHR_RTN : .byt 0
+
+
+            ;=========================================
+            ; Create jump and data tables
+            ;=========================================
+
+            ;-----------------------------------------
+            ; Create jump table
+            ;-----------------------------------------
+
+            ; Store JMP absolute opcodes
+makeJTable  lda #OP_JMPA       ; JMP absolute opcode
+            sta CSAYHELLO
+            sta CSAYBYE
+
+            ; Jump table address for SayHello
+            clc
+            lda PC
+            adc #<(SayHello-callGetPC)
+            sta CSAYHELLO+1
+            lda PC+1
+            adc #>(SayHello-callGetPC)
+            sta CSAYHELLO+2
+
+            ; Jump table address for SayGoodbye
+            clc
+            lda PC
+            adc #<(SayGoodbye-callGetPC)
+            sta CSAYBYE+1
+            lda PC+1
+            adc #>(SayGoodbye-callGetPC)
+            sta CSAYBYE+2
+
+            ;-----------------------------------------
+            ; Create data table
+            ;-----------------------------------------
+
+            ; Point entry at index IHELLOMSG to helloMsg
+            clc
+            lda PC
+            adc #<(helloMsg-callGetPC)
+            sta DATA_TABLE+IHELLOMSG
+            lda PC+1
+            adc #>(helloMsg-callGetPC)
+            sta DATA_TABLE+IHELLOMSG+1
+
+            ; Point entry at index IBYEMSG to byeMsg
+            clc
+            lda PC
+            adc #<(byeMsg-callGetPC)
+            sta DATA_TABLE+IBYEMSG
+            lda PC+1
+            adc #>(byeMsg-callGetPC)
+            sta DATA_TABLE+IBYEMSG+1
+
+
+            ;=========================================
+            ; MAIN program
+            ;=========================================
+            jsr CSAYHELLO
+            jsr CSAYBYE
+            rts
+
+
+            ;=========================================
+            ; Subroutines
+            ;=========================================
+
+            ;-----------------------------------------
+            ; SayHello
+            ; Displays 'HELLO, WORLD!' message
+            ;-----------------------------------------
+SayHello    .(
+            ; Point TMP_DPTR to helloMsg
+            lda DATA_TABLE+IHELLOMSG
+            sta TMP_DPTR
+            lda DATA_TABLE+IHELLOMSG+1
+            sta TMP_DPTR+1
+
+            ; Output message
+            ldy #$00
+loop        lda (TMP_DPTR), y
+            beq finished
+            jsr CCHROUT        ; Output char to screen
+            iny
+            bne loop
+finished    rts
+.)
+
+
+            ;-----------------------------------------
+            ; SayGoodbye
+            ; Displays 'GOODBYE, WORLD!' message
+            ;-----------------------------------------
+SayGoodbye  .(
+            ; Point TMP_DPTR to byeMsg
+            lda DATA_TABLE+IBYEMSG
+            sta TMP_DPTR
+            lda DATA_TABLE+IBYEMSG+1
+            sta TMP_DPTR+1
+
+            ; Output message
+            ldy #$00
+loop        lda (TMP_DPTR), y
+            beq finished
+            jsr CCHROUT        ; Output char to screen
+            iny
+            bne loop
+finished    rts
+.)
