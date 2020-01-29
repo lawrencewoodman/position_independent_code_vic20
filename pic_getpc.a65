@@ -33,11 +33,27 @@ GetPC      = $02A1             ; Location of GetPC routine
             .byt $03, $12      ; Load Address.
                                ; $1203 should work for any memory configuration
 
+
+            ;=========================================
+            ; Static data
+            ;=========================================
+            * = $1203
+
+            ; BRanch Always
+            clv
+            bvc start
+
+            ;-----------------------------------------
+            ; Message strings
+            ;-----------------------------------------
+helloMsg   .asc "HELLO, WORLD!" : .byt CHR_RTN : .byt 0
+byeMsg     .asc "GOODBYE, WORLD!" : .byt CHR_RTN : .byt 0
+
+
             ;=========================================
             ; Determine Absolute address for start of
             ; code
             ;=========================================
-            * = $1203
 
             ;-----------------------------------------
             ;  Create GetPC at $02A1
@@ -107,21 +123,6 @@ callGetPC   jsr GetPC          ; Get absolute address of callGetPC
 
 
             ;=========================================
-            ; Main program
-            ;=========================================
-
-            ; BRanch Always
-            clv
-            bvc makeJTable
-
-            ;-----------------------------------------
-            ; Message strings
-            ;-----------------------------------------
-helloMsg   .asc "HELLO, WORLD!" : .byt CHR_RTN : .byt 0
-byeMsg     .asc "GOODBYE, WORLD!" : .byt CHR_RTN : .byt 0
-
-
-            ;=========================================
             ; Create jump and data tables
             ;=========================================
 
@@ -130,7 +131,7 @@ byeMsg     .asc "GOODBYE, WORLD!" : .byt CHR_RTN : .byt 0
             ;-----------------------------------------
 
             ; Store JMP absolute opcodes
-makeJTable  lda #OP_JMPA       ; JMP absolute opcode
+            lda #OP_JMPA       ; JMP absolute opcode
             sta CSAYHELLO
             sta CSAYBYE
 
@@ -207,7 +208,6 @@ loop        lda (TMP_DPTR), y
             bne loop
 finished    rts
 .)
-
 
             ;-----------------------------------------
             ; SayGoodbye
