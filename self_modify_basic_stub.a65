@@ -132,7 +132,7 @@ lastStore   sta (SMADDR, x)
             ;=========================================
             ; MAIN program
             ;=========================================
-main:       jsr SayHello
+main        jsr SayHello
             jsr SayGoodbye
             rts
 
