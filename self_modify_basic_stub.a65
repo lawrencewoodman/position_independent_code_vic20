@@ -1,7 +1,7 @@
 ;=====================================================
 ; Example of Self Modifying Position Independent Code
 ; Lawrence Woodman <lwoodman@vlifesystems.com>
-; 24 January 2020
+; 1 February 2020
 ;=====================================================
 
 ; Basic Stub
@@ -30,9 +30,9 @@ CCHROUT    = $FFD2             ; Output character to current output device
             ;=========================================
             ;  Basic Stub
             ;=========================================
+            * = $1001
 
             ; 2020 SYS PEEK(43)+PEEK(44)*256+27
-            * = $1001
 start       .word basicEnd     ; Next Line link, here end of Basic program
             .word 2020         ; The line number for the SYS statement
             .byt  TOK_SYS      ; SYS token
@@ -57,6 +57,8 @@ basicEnd    .word 0            ; End of Basic program
             ;=========================================
             ; Start of machine language
             ;=========================================
+mLang
+            * = mLang-start
 
             ; BRanch Always
             clv
@@ -74,12 +76,12 @@ byeMsg     .asc "GOODBYE, WORLD!" : .byt CHR_RTN : .byt 0
 
             ;-----------------------------------------
             ; Self-modification table
-            ; offsetAddr  :  offsetValue
+            ; offsetAddr
             ;-----------------------------------------
-smTable     .word main-start+1       : .word SayHello-start
-            .word main-start+4       : .word SayGoodbye-start
-            .word SayHello-start+3   : .word helloMsg-start
-            .word SayGoodbye-start+3 : .word byeMsg-start
+smTable     .word main+1
+            .word main+4
+            .word SayHello+3
+            .word SayGoodbye+3
             .word 0            ; End of table
 
             ;-----------------------------------------
@@ -91,11 +93,18 @@ setupSM     .(
             ; Create pointer to smTable
             clc
             lda TXTTAB         ; Get start of tokenized Basic
-            adc #<(smTable-start)
+            adc #<smTable
             sta PSMTABLE
             lda TXTTAB+1
-            adc #>(smTable-start)
+            adc #>smTable
             sta PSMTABLE+1
+
+            ; Skip self-modication if has already been run
+            ; This isn't needed if sure code will only be run once
+            ldy #01
+            lda (PSMTABLE), y
+            cmp #$FF           ; Page $FF indicates SM already run
+            beq main
 
             ; Point offsets in smTable to absolute addresses
             ldx #00
@@ -110,23 +119,28 @@ loop       ; Calculate address to change
             adc (PSMTABLE), y
             iny
             sta SMADDR+1
-            ; Calculate and store value
+            ; Move value at address
+            tya
+            tax
+            ldy #00
             clc
             lda TXTTAB
-            adc (PSMTABLE), y
+            adc (SMADDR), y
+            sta (SMADDR), y
             iny
-            sta (SMADDR, x)
             lda TXTTAB+1
-            adc (PSMTABLE), y
-            iny
-            ; Increment address
-            inc SMADDR
-            bne lastStore
-            inc SMADDR+1
-
-lastStore   sta (SMADDR, x)
+            adc (SMADDR), y
+            sta (SMADDR), y
+            txa
+            tay
             lda (PSMTABLE), y
             bne loop           ; If not end of table
+
+            ; Record that self-modication has been run
+            ; by setting page of first address to $FF
+            ldy #01
+            lda #$FF
+            sta (PSMTABLE), y
 .)
 
             ;=========================================
