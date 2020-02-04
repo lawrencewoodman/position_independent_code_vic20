@@ -135,7 +135,7 @@ loop       ; Calculate address to change
             lda (PSMTABLE), y
             bne loop           ; If not end of table
 
-            ; Record that self-modication has been run
+            ; Record that self-modification has been run
             ; by setting page of first address to $FF
             ldy #01
             lda #$FF
