@@ -107,7 +107,6 @@ setupSM     .(
             beq main
 
             ; Point offsets in smTable to absolute addresses
-            ldx #00
             ldy #00
             lda (PSMTABLE), y
 loop       ; Calculate address to change
@@ -169,7 +168,6 @@ loop        lda helloMsg, y
             bne loop
 finished    rts
 .)
-
 
             ;-----------------------------------------
             ; SayGoodbye
